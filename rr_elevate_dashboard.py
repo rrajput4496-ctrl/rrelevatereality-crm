@@ -926,18 +926,23 @@ elif st.session_state.page == "AI Agents":
                 st.metric("Accuracy", f"{random.randint(94,99)}%", "+2% this week")
                 st.metric("Response Time", f"{random.randint(1,5)}s", "-0.5s improved")
                 if st.button(f"Configure {agent['name'].split()[0]}", key=f"cfg_{i}"):
-      if "Score" in df.columns:
-        if "High" in sort_by:
-            df = df.sort_values("Score", ascending=False)
-        elif "Low" in sort_by:
-            df = df.sort_values("Score", ascending=True)
-        elif "Name" in sort_by:
-            df = df.sort_values("Name") 
+                    st.success(f"✅ Opening {agent['name']} configuration...")
+
+# ─────────────────────────────────────────────
+# PAGE: LEADS
+# ─────────────────────────────────────────────
+elif st.session_state.page == "Leads":
+
+    # Load website leads
+    web_df = get_website_leads_df()
+    web_count = len(web_df)
+
+    st.markdown(f"""
     <div style="padding:20px 0 16px;display:flex;justify-content:space-between;align-items:center">
         <div>
             <div style="font-family:'Space Grotesk',sans-serif;font-size:1.4rem;font-weight:700;color:#fff">
                 👥 Leads <span style="color:#C9A227">Management</span>
-            score_color = GREEN if row.get("Score", 0) >= 80 else (GOLD if row.get("Score", 0) >= 55 else "#555")
+            </div>
             <div style="font-size:0.7rem;color:#888;margin-top:4px">
                 128 existing leads · {web_count} from website · 42 hot
             </div>
