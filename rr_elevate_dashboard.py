@@ -1132,34 +1132,40 @@ elif st.session_state.page == "Deals":
 
     stages = ["Negotiation", "Documentation", "Site Visit Done", "Loan Processing", "Closing"]
     stage_cols = st.columns(5)
-    deals = [
-        {"name": "Amit Shah", "prop": "3BHK Bopal", "val": "₹80L", "stage": 0, "days": 3},
-        {"name": "Neha Patel", "prop": "2BHK Prahlad Nagar", "val": "₹55L", "stage": 1, "days": 7},
-        {"name": "Krunal Desai", "prop": "3BHK Gota", "val": "₹70L", "stage": 2, "days": 12},
-        {"name": "Dhruv Joshi", "prop": "4BHK Shela", "val": "₹1.2Cr", "stage": 3, "days": 18},
-        {"name": "Rohan Mehta", "prop": "3BHK Satellite", "val": "₹95L", "stage": 4, "days": 25},
-    ]
-    stage_colors = [BLUE, PURPLE, TEAL, ORANGE, GREEN]
-    for i, (stage, col) in enumerate(zip(stages, stage_cols)):
-        with col:
-            st.markdown(f"""
-            <div style="background:#1E1E28;border:1px solid rgba(255,255,255,0.06);
-                        border-top:3px solid {stage_colors[i]};border-radius:10px;padding:12px;margin-bottom:8px">
-                <div style="font-size:0.65rem;font-weight:700;color:{stage_colors[i]};
-                            text-transform:uppercase;letter-spacing:0.1em;margin-bottom:8px">{stage}</div>
-            """, unsafe_allow_html=True)
-            stage_deals = [d for d in deals if d["stage"] == i]
-            for d in stage_deals:
+    deals = []
+    if not deals:
+        st.markdown("""
+        <div style="text-align:center;padding:60px 20px">
+            <div style="font-size:3rem;margin-bottom:16px">💼</div>
+            <div style="font-size:1rem;font-weight:700;color:#fff;margin-bottom:8px">No Deals in Pipeline Yet</div>
+            <div style="font-size:0.82rem;color:#888;max-width:360px;margin:0 auto;line-height:1.7">
+                As your leads progress through negotiation, documentation, and closing,
+                track them here.
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+    else:
+        stage_colors = [BLUE, PURPLE, TEAL, ORANGE, GREEN]
+        for i, (stage, col) in enumerate(zip(stages, stage_cols)):
+            with col:
                 st.markdown(f"""
-                <div style="background:#252530;border:1px solid rgba(255,255,255,0.06);
-                            border-radius:8px;padding:10px;margin-bottom:6px">
-                    <div style="font-size:0.74rem;font-weight:700;color:#fff">{d['name']}</div>
-                    <div style="font-size:0.62rem;color:#888;margin:2px 0">{d['prop']}</div>
-                    <div style="font-size:0.8rem;font-weight:800;color:#C9A227">{d['val']}</div>
-                    <div style="font-size:0.58rem;color:#555;margin-top:4px">Day {d['days']} in pipeline</div>
-                </div>
+                <div style="background:#1E1E28;border:1px solid rgba(255,255,255,0.06);
+                            border-top:3px solid {stage_colors[i]};border-radius:10px;padding:12px;margin-bottom:8px">
+                    <div style="font-size:0.65rem;font-weight:700;color:{stage_colors[i]};
+                                text-transform:uppercase;letter-spacing:0.1em;margin-bottom:8px">{stage}</div>
                 """, unsafe_allow_html=True)
-            st.markdown("</div>", unsafe_allow_html=True)
+                stage_deals = [d for d in deals if d["stage"] == i]
+                for d in stage_deals:
+                    st.markdown(f"""
+                    <div style="background:#252530;border:1px solid rgba(255,255,255,0.06);
+                                border-radius:8px;padding:10px;margin-bottom:6px">
+                        <div style="font-size:0.74rem;font-weight:700;color:#fff">{d['name']}</div>
+                        <div style="font-size:0.62rem;color:#888;margin:2px 0">{d['prop']}</div>
+                        <div style="font-size:0.8rem;font-weight:800;color:#C9A227">{d['val']}</div>
+                        <div style="font-size:0.58rem;color:#555;margin-top:4px">Day {d['days']} in pipeline</div>
+                    </div>
+                    """, unsafe_allow_html=True)
+                st.markdown("</div>", unsafe_allow_html=True)
 
 # ─────────────────────────────────────────────
 # PAGE: APPOINTMENTS
