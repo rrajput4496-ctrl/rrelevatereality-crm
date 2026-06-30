@@ -431,12 +431,12 @@ if LEADS_DATA.empty:
     LEADS_DATA = pd.DataFrame(columns=["Name", "Location", "Requirement", "Budget", "Score", "Status", "Source", "Date", "Phone", "Email", "Message"])
 
 WEEK_DATES = pd.date_range(end=datetime.today(), periods=7).strftime("%d %b").tolist()
-WEEK_LEADS = [28, 45, 38, 72, 85, 60, 52]
-WEEK_VISITS = [4, 8, 5, 12, 10, 7, 8]
-WEEK_DEALS = [1, 2, 1, 3, 2, 2, 1]
+WEEK_LEADS = [0, 0, 0, 0, 0, 0, 0]
+WEEK_VISITS = [0, 0, 0, 0, 0, 0, 0]
+WEEK_DEALS = [0, 0, 0, 0, 0, 0, 0]
 
 MONTH_WEEKS = ["Week 1", "Week 2", "Week 3", "Week 4"]
-MONTH_LEADS = [120, 180, 145, 210]
+MONTH_LEADS = [0, 0, 0, 0]
 
 AI_AGENTS = [
     {"icon": "🤖", "name": "AI Receptionist", "desc": "Handles all incoming chats, calls & queries", "bg": "rgba(58,134,255,0.12)", "tasks": 8, "status": "Active"},
@@ -677,7 +677,7 @@ if st.session_state.page == "Dashboard":
     with c4:
         st.metric("🤝 Deals in Progress", "0")
     with c5:
-        st.metric("💰 Expected Revenue", "₹48.6L", "+15% This Month", delta_color="normal")
+        st.metric("💰 Expected Revenue", "₹0")
 
     st.markdown("<div style='height:16px'></div>", unsafe_allow_html=True)
 
@@ -688,7 +688,7 @@ if st.session_state.page == "Dashboard":
         st.markdown('<div class="card"><div class="card-title">🔻 Lead Funnel</div><div class="card-sub">Conversion pipeline overview</div>', unsafe_allow_html=True)
         fig_funnel = funnel_chart(
             ["New Leads", "Contacted", "Qualified", "Site Visit", "Proposal", "Closed"],
-            [128, 82, 58, 32, 18, 9],
+            [_dash_total, 0, 0, 0, 0, 0],
             [GOLD, BLUE, PURPLE, TEAL, ORANGE, GREEN]
         )
         st.plotly_chart(fig_funnel, use_container_width=True, config={"displayModeBar": False})
@@ -698,14 +698,14 @@ if st.session_state.page == "Dashboard":
         st.markdown('<div class="card"><div class="card-title">📈 Leads Overview</div><div class="card-sub">Daily lead activity</div>', unsafe_allow_html=True)
         tab1, tab2, tab3 = st.tabs(["📅 This Week", "📆 This Month", "📊 Comparison"])
         with tab1:
-            st.plotly_chart(gold_line_chart(WEEK_DATES, WEEK_LEADS), use_container_width=True, config={"displayModeBar": False})
+            st.plotly_chart(gold_line_chart(WEEK_DATES, [0,0,0,0,0,0,0]), use_container_width=True, config={"displayModeBar": False})
         with tab2:
-            st.plotly_chart(gold_line_chart(MONTH_WEEKS, MONTH_LEADS), use_container_width=True, config={"displayModeBar": False})
+            st.plotly_chart(gold_line_chart(MONTH_WEEKS, [0,0,0,0]), use_container_width=True, config={"displayModeBar": False})
         with tab3:
             fig_comp = multi_line_chart(WEEK_DATES, [
-                {"y": WEEK_LEADS, "name": "Leads", "color": GOLD, "fill": True, "fillcolor": "rgba(201,162,39,0.06)"},
-                {"y": [v*3 for v in WEEK_VISITS], "name": "Visits×3", "color": TEAL},
-                {"y": [v*15 for v in WEEK_DEALS], "name": "Deals×15", "color": GREEN},
+                {"y": [0,0,0,0,0,0,0], "name": "Leads", "color": GOLD, "fill": True, "fillcolor": "rgba(201,162,39,0.06)"},
+                {"y": [0,0,0,0,0,0,0], "name": "Visits×3", "color": TEAL},
+                {"y": [0,0,0,0,0,0,0], "name": "Deals×15", "color": GREEN},
             ])
             st.plotly_chart(fig_comp, use_container_width=True, config={"displayModeBar": False})
         st.markdown('</div>', unsafe_allow_html=True)
@@ -715,21 +715,21 @@ if st.session_state.page == "Dashboard":
 
     with d1:
         st.markdown('<div class="card"><div class="card-title">📍 Top Locations</div></div>', unsafe_allow_html=True)
-        fig_loc = donut_chart(
-            ["Bopal", "Prahlad Nagar", "Gota", "Shela", "Others"],
-            [32, 24, 18, 14, 12],
-            [GOLD, BLUE, PURPLE, TEAL, "#555"]
-        )
-        st.plotly_chart(fig_loc, use_container_width=True, config={"displayModeBar": False})
+        _loc_counts = LEADS_DATA["Location"].value_counts().head(5) if not LEADS_DATA.empty else pd.Series(dtype=int)
+        if len(_loc_counts) > 0:
+            fig_loc = donut_chart(list(_loc_counts.index), list(_loc_counts.values), [GOLD, BLUE, PURPLE, TEAL, "#555"][:len(_loc_counts)])
+            st.plotly_chart(fig_loc, use_container_width=True, config={"displayModeBar": False})
+        else:
+            st.markdown("<div style='text-align:center;padding:40px 0;color:#555;font-size:0.78rem'>No location data yet</div>", unsafe_allow_html=True)
 
     with d2:
         st.markdown('<div class="card"><div class="card-title">🏠 Property Type Demand</div></div>', unsafe_allow_html=True)
-        fig_prop = donut_chart(
-            ["2 BHK", "3 BHK", "4 BHK", "Penthouse", "Commercial"],
-            [45, 35, 12, 5, 3],
-            [GOLD, BLUE, PURPLE, TEAL, "#555"]
-        )
-        st.plotly_chart(fig_prop, use_container_width=True, config={"displayModeBar": False})
+        _req_counts = LEADS_DATA["Requirement"].value_counts().head(5) if not LEADS_DATA.empty else pd.Series(dtype=int)
+        if len(_req_counts) > 0:
+            fig_prop = donut_chart(list(_req_counts.index), list(_req_counts.values), [GOLD, BLUE, PURPLE, TEAL, "#555"][:len(_req_counts)])
+            st.plotly_chart(fig_prop, use_container_width=True, config={"displayModeBar": False})
+        else:
+            st.markdown("<div style='text-align:center;padding:40px 0;color:#555;font-size:0.78rem'>No demand data yet</div>", unsafe_allow_html=True)
 
     with d3:
         st.markdown('<div class="card"><div class="card-title">👥 Recent Leads</div>', unsafe_allow_html=True)
@@ -910,14 +910,14 @@ elif st.session_state.page == "AI Agents":
                         ✅ Processing {agent['tasks']} active tasks<br>
                         ✅ Connected to CRM database<br>
                         ✅ WhatsApp & Email integration active<br>
-                        ✅ Last action: {random.randint(1,15)} minutes ago
+                        ✅ Status: Ready
                     </div>
                 </div>
                 """, unsafe_allow_html=True)
             with cols[2]:
-                st.metric("Tasks Today", agent["tasks"], f"+{random.randint(1,5)} vs yesterday")
-                st.metric("Accuracy", f"{random.randint(94,99)}%", "+2% this week")
-                st.metric("Response Time", f"{random.randint(1,5)}s", "-0.5s improved")
+                st.metric("Tasks Today", "0")
+                st.metric("Accuracy", "—")
+                st.metric("Response Time", "—")
                 if st.button(f"Configure {agent['name'].split()[0]}", key=f"cfg_{i}"):
                     st.success(f"✅ Opening {agent['name']} configuration...")
 
@@ -1086,7 +1086,7 @@ elif st.session_state.page == "Reports":
         rc1, rc2 = st.columns(2)
         with rc1:
             st.markdown('<div class="card-title">Weekly Lead Trend</div>', unsafe_allow_html=True)
-            st.plotly_chart(gold_line_chart(WEEK_DATES, WEEK_LEADS), use_container_width=True, config={"displayModeBar": False})
+            st.plotly_chart(gold_line_chart(WEEK_DATES, [0,0,0,0,0,0,0]), use_container_width=True, config={"displayModeBar": False})
         with rc2:
             st.markdown('<div class="card-title">Leads by Source</div>', unsafe_allow_html=True)
             fig_src2 = bar_chart(["Website", "WhatsApp", "Walk-in", "Call", "Referral"], [38, 32, 15, 10, 5], color=GOLD)
@@ -1099,7 +1099,7 @@ elif st.session_state.page == "Reports":
         st.markdown("""
         <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:16px">
         """, unsafe_allow_html=True)
-        rev_stats = [("Total Revenue YTD", "₹3.08Cr", "+22%"), ("Avg Deal Size", "₹85L", "+8%"), ("Best Month", "Jul — ₹62L", "🏆"), ("Target Achievement", "87%", "On Track")]
+        rev_stats = [("Total Revenue YTD", "₹0", ""), ("Avg Deal Size", "₹0", ""), ("Best Month", "—", ""), ("Target Achievement", "0%", "")]
         cols = st.columns(4)
         for i, (label, val, trend) in enumerate(rev_stats):
             with cols[i]:
@@ -1107,8 +1107,8 @@ elif st.session_state.page == "Reports":
 
     with tab_r3:
         prop_names = [p["name"] for p in PROPERTIES]
-        views = [random.randint(50, 300) for _ in PROPERTIES]
-        inquiries = [random.randint(5, 40) for _ in PROPERTIES]
+        views = [0 for _ in PROPERTIES]
+        inquiries = [0 for _ in PROPERTIES]
         fig_pp = go.Figure()
         fig_pp.add_trace(go.Bar(name="Views", x=prop_names, y=views, marker_color=GOLD, opacity=0.8))
         fig_pp.add_trace(go.Bar(name="Inquiries", x=prop_names, y=inquiries, marker_color=TEAL, opacity=0.8))
