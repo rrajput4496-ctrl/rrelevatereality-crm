@@ -426,16 +426,9 @@ TEAL = "#2EC4B6"
 PURPLE = "#9B5DE5"
 ORANGE = "#FB8500"
 
-LEADS_DATA = pd.DataFrame({
-    "Name": ["Amit Shah", "Neha Patel", "Krunal Desai", "Dhruv Joshi", "Meera Trivedi", "Rohan Mehta", "Priya Shah"],
-    "Location": ["Bopal", "Prahlad Nagar", "Gota", "Shela", "Bopal", "Satellite", "Vastrapur"],
-    "Requirement": ["3 BHK", "2 BHK", "3 BHK", "4 BHK", "2 BHK", "3 BHK", "2 BHK"],
-    "Budget": ["₹80L", "₹55L", "₹70L", "₹1.2Cr", "₹50L", "₹95L", "₹62L"],
-    "Score": [90, 75, 65, 60, 40, 82, 70],
-    "Status": ["Hot", "Warm", "Warm", "Warm", "Cold", "Hot", "Warm"],
-    "Source": ["Website", "WhatsApp", "Walk-in", "Referral", "Website", "WhatsApp", "Call"],
-    "Date": ["Today", "Today", "Yesterday", "Yesterday", "2 days ago", "Today", "Yesterday"],
-})
+LEADS_DATA = get_website_leads_df()
+if LEADS_DATA.empty:
+    LEADS_DATA = pd.DataFrame(columns=["Name", "Location", "Requirement", "Budget", "Score", "Status", "Source", "Date", "Phone", "Email", "Message"])
 
 WEEK_DATES = pd.date_range(end=datetime.today(), periods=7).strftime("%d %b").tolist()
 WEEK_LEADS = [28, 45, 38, 72, 85, 60, 52]
@@ -463,13 +456,7 @@ PROPERTIES = [
     {"name": "Commercial Space", "loc": "SG Highway", "price": "₹1.8Cr", "bed": 0, "bath": 2, "area": "2800 sq.ft", "status": "Available"},
 ]
 
-SCHEDULE_TODAY = [
-    {"time": "10:00 AM", "title": "Site Visit — 3 BHK Apartment", "loc": "📍 Bopal, Ahmedabad", "with": "Amit Shah"},
-    {"time": "12:00 PM", "title": "Meeting — Client Discussion", "loc": "📍 Prahlad Nagar", "with": "Neha Patel"},
-    {"time": "02:30 PM", "title": "Site Visit — 2 BHK Apartment", "loc": "📍 Gota, Ahmedabad", "with": "Krunal Desai"},
-    {"time": "04:00 PM", "title": "Meeting — NRI Client (Online)", "loc": "📍 Google Meet", "with": "Dhruv Joshi"},
-    {"time": "05:30 PM", "title": "Property Handover", "loc": "📍 Shela, Ahmedabad", "with": "Meera Trivedi"},
-]
+SCHEDULE_TODAY = []
 
 # ─────────────────────────────────────────────
 # CHART HELPERS
@@ -933,9 +920,8 @@ elif st.session_state.page == "AI Agents":
 # ─────────────────────────────────────────────
 elif st.session_state.page == "Leads":
 
-    # Load website leads
-    web_df = get_website_leads_df()
-    web_count = len(web_df)
+    real_count = len(LEADS_DATA)
+    hot_count = len(LEADS_DATA[LEADS_DATA["Status"] == "Hot"]) if not LEADS_DATA.empty else 0
 
     st.markdown(f"""
     <div style="padding:20px 0 16px;display:flex;justify-content:space-between;align-items:center">
@@ -944,18 +930,15 @@ elif st.session_state.page == "Leads":
                 👥 Leads <span style="color:#C9A227">Management</span>
             </div>
             <div style="font-size:0.7rem;color:#888;margin-top:4px">
-                128 existing leads · {web_count} from website · 42 hot
+                {real_count} total leads · {hot_count} hot
             </div>
         </div>
-        {"<div style='background:rgba(6,214,160,0.1);border:1px solid rgba(6,214,160,0.3);border-radius:20px;padding:6px 16px;font-size:0.65rem;color:#06D6A0;font-weight:700'>🌐 " + str(web_count) + " NEW from Website</div>" if web_count > 0 else ""}
+        {"<div style='background:rgba(6,214,160,0.1);border:1px solid rgba(6,214,160,0.3);border-radius:20px;padding:6px 16px;font-size:0.65rem;color:#06D6A0;font-weight:700'>🌐 Live from Website</div>" if real_count > 0 else ""}
     </div>
     """, unsafe_allow_html=True)
 
-    # ── TABS: All Leads / Website Leads ──
-    tab_all, tab_web = st.tabs([
-        f"📋 All Leads (128)",
-        f"🌐 Website Leads ({web_count})"
-    ])
+    if st.button("🔄 Refresh Leads", use_container_width=False):
+        st.rerun()
 
     def render_lead_row(row, show_phone=False):
         score_color = GREEN if int(row["Score"]) >= 80 else (GOLD if int(row["Score"]) >= 55 else "#555")
@@ -987,75 +970,45 @@ elif st.session_state.page == "Leads":
         </div>
         """, unsafe_allow_html=True)
 
-    # ── TAB 1: ALL LEADS ──
-    with tab_all:
-        f1, f2, f3, f4 = st.columns(4)
+    if LEADS_DATA.empty:
+        st.markdown("""
+        <div style="text-align:center;padding:60px 20px">
+            <div style="font-size:3rem;margin-bottom:16px">🌐</div>
+            <div style="font-size:1rem;font-weight:700;color:#fff;margin-bottom:8px">No Leads Yet</div>
+            <div style="font-size:0.82rem;color:#888;max-width:360px;margin:0 auto;line-height:1.7">
+                When someone fills the contact form on your website,
+                their lead will appear here automatically in real-time.
+            </div>
+            <div style="margin-top:20px;background:rgba(201,162,39,0.08);border:1px solid rgba(201,162,39,0.2);
+                        border-radius:10px;padding:14px 24px;font-size:0.78rem;color:#C9A227;display:inline-block">
+                Make sure api.py is running so leads get captured
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+    else:
+        f1, f2, f3 = st.columns(3)
         with f1:
             status_filter = st.selectbox("Filter by Status", ["All", "Hot", "Warm", "Cold"])
         with f2:
-            source_filter = st.selectbox("Filter by Source", ["All Sources", "Website", "WhatsApp", "Walk-in", "Call", "Referral"])
+            sort_by = st.selectbox("Sort by", ["Score (High)", "Score (Low)", "Name", "Date"])
         with f3:
-            sort_by = st.selectbox("Sort by", ["Score (High)", "Score (Low)", "Name", "Budget"])
-        with f4:
             st.markdown("<div style='height:28px'></div>", unsafe_allow_html=True)
-            if st.button("➕ Add New Lead", use_container_width=True):
-                st.success("✅ Opening Add Lead form...")
 
         df = LEADS_DATA.copy()
         if status_filter != "All":
             df = df[df["Status"] == status_filter]
-        if source_filter != "All Sources":
-            df = df[df["Source"] == source_filter]
         if "High" in sort_by:
             df = df.sort_values("Score", ascending=False)
         elif "Low" in sort_by:
             df = df.sort_values("Score", ascending=True)
         elif "Name" in sort_by:
             df = df.sort_values("Name")
+        elif "Date" in sort_by:
+            df = df.sort_values("Date", ascending=False)
 
         st.markdown(f"<div style='font-size:0.7rem;color:#888;margin-bottom:10px'>Showing {len(df)} leads</div>", unsafe_allow_html=True)
         for _, row in df.iterrows():
-            render_lead_row(row)
-
-    # ── TAB 2: WEBSITE LEADS ──
-    with tab_web:
-        if web_count == 0:
-            st.markdown("""
-            <div style="text-align:center;padding:60px 20px">
-                <div style="font-size:3rem;margin-bottom:16px">🌐</div>
-                <div style="font-size:1rem;font-weight:700;color:#fff;margin-bottom:8px">No Website Leads Yet</div>
-                <div style="font-size:0.82rem;color:#888;max-width:360px;margin:0 auto;line-height:1.7">
-                    When someone fills the contact form on your website,
-                    their lead will appear here automatically in real-time.
-                </div>
-                <div style="margin-top:20px;background:rgba(201,162,39,0.08);border:1px solid rgba(201,162,39,0.2);
-                            border-radius:10px;padding:14px 24px;font-size:0.78rem;color:#C9A227;display:inline-block">
-                    Make sure api.py is running on port 5000
-                </div>
-            </div>
-            """, unsafe_allow_html=True)
-        else:
-            # Stats row
-            hot_w = len(web_df[web_df["Status"] == "Hot"]) if "Status" in web_df.columns else 0
-            warm_w = len(web_df[web_df["Status"] == "Warm"]) if "Status" in web_df.columns else 0
-            cold_w = len(web_df[web_df["Status"] == "Cold"]) if "Status" in web_df.columns else 0
-
-            wc1, wc2, wc3, wc4 = st.columns(4)
-            with wc1: st.metric("🌐 Total Website Leads", web_count)
-            with wc2: st.metric("🔥 Hot", hot_w)
-            with wc3: st.metric("🌡️ Warm", warm_w)
-            with wc4: st.metric("❄️ Cold", cold_w)
-
-            st.markdown("<div style='height:8px'></div>", unsafe_allow_html=True)
-
-            if st.button("🔄 Refresh Leads", use_container_width=False):
-                st.rerun()
-
-            st.markdown(f"<div style='font-size:0.7rem;color:#C9A227;font-weight:700;margin:12px 0 8px'>🌐 {web_count} leads from your website — with full contact details</div>", unsafe_allow_html=True)
-
-            # Show website leads with phone/email/message
-            for _, row in web_df.sort_values("Score", ascending=False).iterrows():
-                render_lead_row(row, show_phone=True)
+            render_lead_row(row, show_phone=True)
 
 # ─────────────────────────────────────────────
 # PAGE: PROPERTIES
