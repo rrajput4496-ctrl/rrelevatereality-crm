@@ -15,6 +15,10 @@ import random
 import time
 import csv
 import os
+from auth import (
+    init_users_file, is_logged_in, current_user, current_role,
+    logout, render_auth_screen, render_pending_approvals, render_client_portal
+)
 
 # ── WEBSITE LEADS INTEGRATION ──────────────────
 WEBSITE_LEADS_FILE = "leads_from_website.csv"
@@ -62,6 +66,21 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded"
 )
+
+# ─────────────────────────────────────────────
+# AUTH GATE — must log in before seeing anything
+# ─────────────────────────────────────────────
+init_users_file()
+if not is_logged_in():
+    render_auth_screen()
+    st.stop()
+
+# ─────────────────────────────────────────────
+# CLIENT PORTAL — clients see a completely different, simpler view
+# ─────────────────────────────────────────────
+if current_role() == "Client":
+    render_client_portal()
+    st.stop()
 
 # ─────────────────────────────────────────────
 # CUSTOM CSS — BLACK + GOLD LUXURY THEME
@@ -582,6 +601,8 @@ with st.sidebar:
     st.markdown("<div style='padding:8px 10px'>", unsafe_allow_html=True)
 
     _real_leads_count = len(get_website_leads_df())
+    _role = current_role()
+    _user = current_user()
 
     pages = {
         "📊 Dashboard": "Dashboard",
@@ -597,6 +618,12 @@ with st.sidebar:
         "⚙️ Settings": "Settings",
     }
 
+    # Founder-only: user approvals page
+    if _role == "Founder":
+        from auth import load_users
+        _pending_count = len(load_users().query("status == 'pending'"))
+        pages[f"🔐 Approvals ({_pending_count})"] = "Approvals"
+
     if "page" not in st.session_state:
         st.session_state.page = "Dashboard"
 
@@ -608,6 +635,17 @@ with st.sidebar:
 
     st.markdown("</div>", unsafe_allow_html=True)
     st.markdown("<hr>", unsafe_allow_html=True)
+
+    # Current user info + logout
+    st.markdown(f"""
+    <div style="background:rgba(201,162,39,0.06);border:1px solid rgba(201,162,39,0.15);
+                border-radius:10px;padding:12px 14px;margin:8px">
+        <div style="font-size:0.78rem;font-weight:700;color:#fff">👤 {_user.get('full_name','')}</div>
+        <div style="font-size:0.62rem;color:#C9A227;letter-spacing:0.08em;text-transform:uppercase;margin-top:2px">{_role}</div>
+    </div>
+    """, unsafe_allow_html=True)
+    if st.button("🚪 Logout", use_container_width=True):
+        logout()
 
     # Promo
     st.markdown("""
@@ -1199,6 +1237,15 @@ elif st.session_state.page == "Appointments":
         with c2:
             if st.button("✅ Mark Done", key=f"done_{s['time']}"):
                 st.success(f"Marked: {s['title']}")
+
+# ─────────────────────────────────────────────
+# PAGE: APPROVALS (Founder only)
+# ─────────────────────────────────────────────
+elif st.session_state.page == "Approvals":
+    if current_role() == "Founder":
+        render_pending_approvals()
+    else:
+        st.error("You don't have permission to view this page.")
 
 # ─────────────────────────────────────────────
 # OTHER PAGES — PLACEHOLDER
