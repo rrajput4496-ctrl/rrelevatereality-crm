@@ -581,12 +581,14 @@ with st.sidebar:
 
     st.markdown("<div style='padding:8px 10px'>", unsafe_allow_html=True)
 
+    _real_leads_count = len(get_website_leads_df())
+
     pages = {
         "📊 Dashboard": "Dashboard",
-        "👥 Leads (128)": "Leads",
+        f"👥 Leads ({_real_leads_count})": "Leads",
         "🏠 Properties": "Properties",
         "📅 Appointments": "Appointments",
-        "💼 Deals (24)": "Deals",
+        "💼 Deals": "Deals",
         "👤 Clients": "Clients",
         "✅ Tasks": "Tasks",
         "📣 Marketing": "Marketing",
@@ -661,15 +663,19 @@ if st.session_state.page == "Dashboard":
     """, unsafe_allow_html=True)
 
     # ── STAT CARDS ──
+    _dash_leads = get_website_leads_df()
+    _dash_total = len(_dash_leads)
+    _dash_hot = len(_dash_leads[_dash_leads["Status"] == "Hot"]) if not _dash_leads.empty else 0
+
     c1, c2, c3, c4, c5 = st.columns(5)
     with c1:
-        st.metric("👥 Total Leads", "128", "+18% This Week", delta_color="normal")
+        st.metric("👥 Total Leads", str(_dash_total))
     with c2:
-        st.metric("🔥 Hot Leads", "42", "+12% This Week", delta_color="normal")
+        st.metric("🔥 Hot Leads", str(_dash_hot))
     with c3:
-        st.metric("📅 Site Visits Today", "8", "+5 This Week", delta_color="normal")
+        st.metric("📅 Site Visits Today", "0")
     with c4:
-        st.metric("🤝 Deals in Progress", "24", "+8% This Week", delta_color="normal")
+        st.metric("🤝 Deals in Progress", "0")
     with c5:
         st.metric("💰 Expected Revenue", "₹48.6L", "+15% This Month", delta_color="normal")
 
